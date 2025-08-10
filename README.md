@@ -56,10 +56,34 @@ Data is processed through:
 
 ## Getting Started
 
+### Quick Start (5 Minutes)
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-org/civicshield.git
+   cd civicshield
+   ```
+
+2. Start the platform:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. Access the services:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+Default login:
+- Username: admin@civicshield.gov
+- Password: Admin123!
+
+For detailed instructions, see [Quick Start Guide](docs/quick-start.md)
+
 ### Prerequisites
 - Docker and Docker Compose
-- Python 3.9+
-- Node.js 16+
+- Python 3.9+ (for development)
+- Node.js 16+ (for development)
 - Kubernetes cluster (for production deployment)
 
 ### Development Setup
