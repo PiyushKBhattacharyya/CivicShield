@@ -8,7 +8,7 @@ factory-boy==3.2.0
 freezegun==1.1.0
 
 # Code Quality
-black==21.7b0
+black==24.3.0
 flake8==3.9.2
 mypy==0.910
 isort==5.9.3
@@ -16,7 +16,7 @@ pre-commit==2.13.0
 
 # Debugging
 pdbpp==0.10.3
-ipython==7.26.0
+ipython==8.10.0
 
 # Documentation
 sphinx==4.1.2
@@ -24,7 +24,7 @@ sphinx-rtd-theme==0.5.2
 
 # Development Tools
 jupyter==1.0.0
-jupyterlab==3.1.7
+jupyterlab==3.6.8
 
 # Security
 bandit==1.7.0
