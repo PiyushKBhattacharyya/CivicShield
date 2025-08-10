@@ -1,0 +1,311 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicshield-backend
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: civicshield
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: civicshield
+        component: backend
+    spec:
+      containers:
+      - name: backend
+        image: civicshield/backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: redis-url
+        - name: ELASTICSEARCH_URL
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: elasticsearch-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: secret-key
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicshield-frontend
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: civicshield
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: civicshield
+        component: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: civicshield/frontend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_BASE_URL
+          value: "http://civicshield-backend:8000"
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+          requests:
+            memory: "256Mi"
+            cpu: "125m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicshield-ai
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: ai
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: civicshield
+      component: ai
+  template:
+    metadata:
+      labels:
+        app: civicshield
+        component: ai
+    spec:
+      containers:
+      - name: ai
+        image: civicshield/ai:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: database-url
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicshield-database
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: civicshield
+      component: database
+  template:
+    metadata:
+      labels:
+        app: civicshield
+        component: database
+    spec:
+      containers:
+      - name: database
+        image: postgres:13
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: postgres-db
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: postgres-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: postgres-password
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: civicshield-postgres-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicshield-redis
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: civicshield
+      component: redis
+  template:
+    metadata:
+      labels:
+        app: civicshield
+        component: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:6-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+          requests:
+            memory: "256Mi"
+            cpu: "125m"
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: civicshield-redis-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicshield-elasticsearch
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: civicshield
+      component: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: civicshield
+        component: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        env:
+        - name: discovery.type
+          value: "single-node"
+        - name: ES_JAVA_OPTS
+          value: "-Xms2g -Xmx2g"
+        - name: ELASTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: elastic-password
+        resources:
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: elasticsearch-storage
+          mountPath: /usr/share/elasticsearch/data
+      volumes:
+      - name: elasticsearch-storage
+        persistentVolumeClaim:
+          claimName: civicshield-elasticsearch-pvc

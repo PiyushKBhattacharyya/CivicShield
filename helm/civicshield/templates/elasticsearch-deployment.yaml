@@ -1,0 +1,47 @@
+{{- if .Values.database.elasticsearch.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "civicshield.fullname" . }}-elasticsearch
+  labels:
+    {{- include "civicshield.labels" . | nindent 4 }}
+    app: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "civicshield.selectorLabels" . | nindent 6 }}
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        {{- include "civicshield.selectorLabels" . | nindent 8 }}
+        app: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: "{{ .Values.database.elasticsearch.image.repository }}:{{ .Values.database.elasticsearch.image.tag }}"
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        env:
+        - name: discovery.type
+          value: "single-node"
+        - name: ES_JAVA_OPTS
+          value: "-Xms1g -Xmx1g"
+        - name: ELASTIC_PASSWORD
+          value: {{ .Values.database.elasticsearch.auth.password | default "civicshield_elastic_pass" | quote }}
+        volumeMounts:
+        - name: elasticsearch-storage
+          mountPath: /usr/share/elasticsearch/data
+        resources:
+          {{- toYaml .Values.database.elasticsearch.resources | nindent 10 }}
+      volumes:
+      - name: elasticsearch-storage
+      {{- if .Values.database.elasticsearch.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "civicshield.fullname" . }}-elasticsearch-pvc
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+{{- end }}

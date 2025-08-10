@@ -1,0 +1,17 @@
+apiVersion: v2
+name: civicshield
+description: A Helm chart for the CivicShield platform
+type: application
+version: 0.1.0
+appVersion: 1.0.0
+keywords:
+  - civicshield
+  - security
+  - threat-detection
+  - crisis-management
+home: https://civicshield.example.com
+sources:
+  - https://github.com/civicshield/civicshield
+maintainers:
+  - name: CivicShield Team
+    email: support@civicshield.example.com

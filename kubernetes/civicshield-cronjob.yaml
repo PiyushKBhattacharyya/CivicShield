@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: civicshield-database-backup
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: backup
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:13
+            command:
+            - /bin/bash
+            - -c
+            - |
+              pg_dump -h civicshield-database -U civicshield_user -d civicshield > /backups/civicshield-$(date +%Y%m%d-%H%M%S).sql
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: civicshield-secrets
+                  key: postgres-password
+            volumeMounts:
+            - name: backups-storage
+              mountPath: /backups
+          volumes:
+          - name: backups-storage
+            persistentVolumeClaim:
+              claimName: civicshield-backups-pvc
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: civicshield-log-rotation
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: logging
+spec:
+  schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: log-rotation
+            image: busybox
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Rotating logs..."
+              # Add log rotation commands here
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: civicshield-security-scan
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: security
+spec:
+  schedule: "0 4 * * *"  # Daily at 4 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: security-scan
+            image: aquasec/trivy:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              trivy filesystem /app
+            volumeMounts:
+            - name: app-storage
+              mountPath: /app
+          volumes:
+          - name: app-storage
+            persistentVolumeClaim:
+              claimName: civicshield-postgres-pvc
+          restartPolicy: OnFailure

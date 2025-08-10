@@ -1,0 +1,42 @@
+{{- if .Values.monitoring.enabled -}}
+{{- if .Values.monitoring.prometheus.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "civicshield.fullname" . }}-prometheus
+  labels:
+    {{- include "civicshield.labels" . | nindent 4 }}
+    app: prometheus
+spec:
+  type: {{ .Values.monitoring.prometheus.service.type }}
+  ports:
+    - port: {{ .Values.monitoring.prometheus.service.port }}
+      targetPort: {{ .Values.monitoring.prometheus.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "civicshield.selectorLabels" . | nindent 4 }}
+    app: prometheus
+{{- end }}
+
+{{- if .Values.monitoring.grafana.enabled -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "civicshield.fullname" . }}-grafana
+  labels:
+    {{- include "civicshield.labels" . | nindent 4 }}
+    app: grafana
+spec:
+  type: {{ .Values.monitoring.grafana.service.type }}
+  ports:
+    - port: {{ .Values.monitoring.grafana.service.port }}
+      targetPort: {{ .Values.monitoring.grafana.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "civicshield.selectorLabels" . | nindent 4 }}
+    app: grafana
+{{- end }}
+{{- end }}

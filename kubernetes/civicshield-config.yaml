@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: civicshield-config
+  namespace: civicshield
+  labels:
+    app: civicshield
+data:
+  # Application configuration
+  app.environment: "production"
+  app.debug: "false"
+  app.log.level: "INFO"
+  
+  # Database configuration
+  database.host: "civicshield-database"
+  database.port: "5432"
+  database.name: "civicshield"
+  
+  # Redis configuration
+  redis.host: "civicshield-redis"
+  redis.port: "6379"
+  
+  # Elasticsearch configuration
+  elasticsearch.host: "civicshield-elasticsearch"
+  elasticsearch.port: "9200"
+  
+  # API configuration
+  api.version: "v1"
+  api.rate_limit: "1000/hour"
+  
+  # Frontend configuration
+  frontend.title: "CivicShield - Threat Detection & Crisis Management"
+  frontend.description: "AI-Driven Threat Detection & Crisis Management Platform for Public Safety"
+  
+  # AI/ML configuration
+  ai.model.path: "/app/models"
+  ai.batch.size: "32"
+  ai.max.tokens: "512"
+  
+  # Monitoring configuration
+  monitoring.enabled: "true"
+  monitoring.interval: "30s"
+  
+  # Security configuration
+  security.encryption.algorithm: "AES-256"
+  security.hash.algorithm: "bcrypt"
+  
+  # Compliance configuration
+  compliance.standard: "FedRAMP"
+  compliance.level: "Moderate"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: civicshield-frontend-config
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: frontend
+data:
+  # Frontend configuration
+  NEXT_PUBLIC_APP_NAME: "CivicShield"
+  NEXT_PUBLIC_API_BASE_URL: "http://civicshield-backend:8000"
+  NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: "your_mapbox_token_here"
+  NEXT_PUBLIC_SOCKET_IO_URL: "http://civicshield-backend:8000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: civicshield-backend-config
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: backend
+data:
+  # Backend configuration
+  DATABASE_URL: "postgresql://civicshield_user:civicshield_pass@civicshield-database:5432/civicshield"
+  REDIS_URL: "redis://civicshield-redis:6379/0"
+  ELASTICSEARCH_URL: "http://civicshield-elasticsearch:9200"
+  SECRET_KEY: "your_secret_key_here"
+  DEBUG: "False"
+  ALLOWED_HOSTS: "civicshield.example.com"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: civicshield-ai-config
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: ai
+data:
+  # AI/ML configuration
+  DATABASE_URL: "postgresql://civicshield_user:civicshield_pass@civicshield-database:5432/civicshield"
+  MODEL_PATH: "/app/models"
+  MAX_TOKENS: "512"
+  BATCH_SIZE: "32"

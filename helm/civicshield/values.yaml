@@ -1,0 +1,193 @@
+# Default values for CivicShield Helm chart
+
+# Global values
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Backend configuration
+backend:
+  image:
+    repository: civicshield/backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 3
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    DATABASE_URL: "postgresql://civicshield_user:civicshield_pass@postgresql:5432/civicshield"
+    REDIS_URL: "redis://redis:6379/0"
+    ELASTICSEARCH_URL: "http://elasticsearch:9200"
+  secrets:
+    enabled: true
+    secretName: civicshield-secrets
+
+# Frontend configuration
+frontend:
+  image:
+    repository: civicshield/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 3
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    NEXT_PUBLIC_API_BASE_URL: "http://civicshield-backend:8000"
+  secrets:
+    enabled: true
+    secretName: civicshield-secrets
+
+# Database configuration
+database:
+  postgresql:
+    enabled: true
+    image:
+      repository: postgres
+      tag: 13
+    auth:
+      postgresPassword: civicshield_pass
+      username: civicshield_user
+      password: civicshield_pass
+    primary:
+      persistence:
+        enabled: true
+        size: 10Gi
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+
+  redis:
+    enabled: true
+    architecture: standalone
+    auth:
+      enabled: true
+      password: civicshield_redis_pass
+    master:
+      persistence:
+        enabled: false
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+
+  elasticsearch:
+    enabled: true
+    image:
+      repository: docker.elastic.co/elasticsearch/elasticsearch
+      tag: 7.14.0
+    replicas: 1
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    sysctlInitContainer:
+      enabled: true
+    persistence:
+      enabled: false
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: civicshield.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: api.civicshield.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: civicshield-tls
+      hosts:
+        - civicshield.example.com
+        - api.civicshield.example.com
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    image:
+      repository: prom/prometheus
+      tag: v2.37.0
+    service:
+      type: ClusterIP
+      port: 9090
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+  grafana:
+    enabled: true
+    image:
+      repository: grafana/grafana-enterprise
+      tag: 9.0.2
+    service:
+      type: ClusterIP
+      port: 3000
+    adminUser: admin
+    adminPassword: admin_password
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# Security configuration
+security:
+  rbac:
+    create: true
+  podSecurityPolicy:
+    enabled: false
+  serviceAccount:
+    create: true
+    name: civicshield
+
+# Affinity and tolerations
+affinity: {}
+tolerations: []
+nodeSelector: {}
+
+# Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80

@@ -1,0 +1,46 @@
+{{- if .Values.database.postgresql.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "civicshield.fullname" . }}-postgresql
+  labels:
+    {{- include "civicshield.labels" . | nindent 4 }}
+    app: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "civicshield.selectorLabels" . | nindent 6 }}
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        {{- include "civicshield.selectorLabels" . | nindent 8 }}
+        app: postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: "{{ .Values.database.postgresql.image.repository }}:{{ .Values.database.postgresql.image.tag }}"
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: {{ .Values.database.postgresql.auth.database | default "civicshield" | quote }}
+        - name: POSTGRES_USER
+          value: {{ .Values.database.postgresql.auth.username | quote }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.database.postgresql.auth.password | quote }}
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          {{- toYaml .Values.database.postgresql.resources | nindent 10 }}
+      volumes:
+      - name: postgres-storage
+      {{- if .Values.database.postgresql.primary.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "civicshield.fullname" . }}-postgres-pvc
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+{{- end }}

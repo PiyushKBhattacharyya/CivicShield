@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: civicshield-service-account
+  namespace: civicshield
+  labels:
+    app: civicshield
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: civicshield-role
+  namespace: civicshield
+  labels:
+    app: civicshield
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: civicshield-role-binding
+  namespace: civicshield
+  labels:
+    app: civicshield
+subjects:
+- kind: ServiceAccount
+  name: civicshield-service-account
+  namespace: civicshield
+roleRef:
+  kind: Role
+  name: civicshield-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: civicshield-cluster-role
+  labels:
+    app: civicshield
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "namespaces"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: civicshield-cluster-role-binding
+  labels:
+    app: civicshield
+subjects:
+- kind: ServiceAccount
+  name: civicshield-service-account
+  namespace: civicshield
+roleRef:
+  kind: ClusterRole
+  name: civicshield-cluster-role
+  apiGroup: rbac.authorization.k8s.io

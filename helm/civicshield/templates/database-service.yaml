@@ -1,0 +1,19 @@
+{{- if .Values.database.postgresql.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "civicshield.fullname" . }}-postgresql
+  labels:
+    {{- include "civicshield.labels" . | nindent 4 }}
+    app: postgresql
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgresql
+  selector:
+    {{- include "civicshield.selectorLabels" . | nindent 4 }}
+    app: postgresql
+{{- end }}

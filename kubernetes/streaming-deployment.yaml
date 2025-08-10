@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: civicshield-streaming
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: streaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: civicshield
+      component: streaming
+  template:
+    metadata:
+      labels:
+        app: civicshield
+        component: streaming
+    spec:
+      serviceAccountName: civicshield-service-account
+      containers:
+      - name: streaming
+        image: civicshield/streaming:latest
+        ports:
+        - containerPort: 8765
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: redis-url
+        - name: ELASTICSEARCH_URL
+          valueFrom:
+            secretKeyRef:
+              name: civicshield-secrets
+              key: elasticsearch-url
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        volumeMounts:
+        - name: backend-code
+          mountPath: /app/backend
+        - name: ai-code
+          mountPath: /app/ai
+      volumes:
+      - name: backend-code
+        hostPath:
+          path: /app/backend
+      - name: ai-code
+        hostPath:
+          path: /app/ai
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: civicshield-streaming
+  namespace: civicshield
+  labels:
+    app: civicshield
+    component: streaming
+spec:
+  selector:
+    app: civicshield
+    component: streaming
+  ports:
+  - name: streaming
+    port: 8765
+    targetPort: 8765
+  type: ClusterIP

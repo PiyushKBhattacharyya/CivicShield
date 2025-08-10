@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: civicshield
+  labels:
+    app: civicshield
+    environment: production
+  annotations:
+    description: "CivicShield - AI-Driven Threat Detection & Crisis Management Platform"

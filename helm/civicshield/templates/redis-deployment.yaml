@@ -1,0 +1,45 @@
+{{- if .Values.database.redis.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "civicshield.fullname" . }}-redis
+  labels:
+    {{- include "civicshield.labels" . | nindent 4 }}
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "civicshield.selectorLabels" . | nindent 6 }}
+      app: redis
+  template:
+    metadata:
+      labels:
+        {{- include "civicshield.selectorLabels" . | nindent 8 }}
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: "redis:6-alpine"
+        ports:
+        - containerPort: 6379
+        command:
+          - "redis-server"
+          - "--appendonly"
+          - "yes"
+          - "--requirepass"
+          - "{{ .Values.database.redis.auth.password }}"
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        resources:
+          {{- toYaml .Values.database.redis.master.resources | nindent 10 }}
+      volumes:
+      - name: redis-storage
+      {{- if .Values.database.redis.master.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "civicshield.fullname" . }}-redis-pvc
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+{{- end }}

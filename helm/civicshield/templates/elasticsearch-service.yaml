@@ -1,0 +1,23 @@
+{{- if .Values.database.elasticsearch.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "civicshield.fullname" . }}-elasticsearch
+  labels:
+    {{- include "civicshield.labels" . | nindent 4 }}
+    app: elasticsearch
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9200
+      targetPort: 9200
+      protocol: TCP
+    - name: transport
+      port: 9300
+      targetPort: 9300
+      protocol: TCP
+  selector:
+    {{- include "civicshield.selectorLabels" . | nindent 4 }}
+    app: elasticsearch
+{{- end }}

@@ -1,0 +1,37 @@
+# Development requirements for CivicShield Backend
+
+# Testing
+pytest==6.2.4
+pytest-cov==2.12.1
+pytest-asyncio==0.15.1
+factory-boy==3.2.0
+freezegun==1.1.0
+
+# Code Quality
+black==21.7b0
+flake8==3.9.2
+mypy==0.910
+isort==5.9.3
+pre-commit==2.13.0
+
+# Debugging
+pdbpp==0.10.3
+ipython==7.26.0
+
+# Documentation
+sphinx==4.1.2
+sphinx-rtd-theme==0.5.2
+
+# Development Tools
+jupyter==1.0.0
+jupyterlab==3.1.7
+
+# Security
+bandit==1.7.0
+safety==1.10.3
+
+# Performance
+locust==2.2.1
+
+# Database
+alembic==1.7.1
